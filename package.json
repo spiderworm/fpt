@@ -1,0 +1,33 @@
+{
+  "name": "mygamename",
+  "version": "0.0.1",
+  "scripts": {
+    "start": "node start-server.js & echo \"open http://localhost:8080/\" && ./node_modules/.bin/beefy start-client.js 8080 -- -d"
+  },
+  "dependencies": {
+    "beefy": "^2.1.0",
+    "browservefy": "0.0.10",
+    "cannon": "^0.5.0",
+    "duplex-emitter": "0.1.10",
+    "events": "^1.0.1",
+    "extend": "1.2.1",
+    "hat": "0.0.3",
+    "interact": "0.0.3",
+    "kb-controls": "^0.2.0",
+    "minecraft-skin": "0.1.2",
+    "path": "^0.4.9",
+    "three": "^0.68.0",
+    "underscore": "^1.6.0",
+    "voxel": "0.3.1",
+    "voxel-client": "^2.1.0",
+    "voxel-control": "^1.0.0",
+    "voxel-crunch": "0.1.1",
+    "voxel-engine": "0.20.0",
+    "voxel-highlight": "0.0.9",
+    "voxel-physi": "git://github.com/timoxley/voxel-real-physics",
+    "voxel-player": "0.1.0",
+    "voxel-server": "^2.1.0",
+    "websocket-stream": "^0.6.0",
+    "ws": "^0.4.32"
+  }
+}
