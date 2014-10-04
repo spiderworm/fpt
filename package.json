@@ -6,7 +6,7 @@
   },
   "dependencies": {
     "beefy": "^2.1.0",
-    "browservefy": "0.0.10",
+    "browserify": "6.0.2",
     "cannon": "^0.5.0",
     "duplex-emitter": "0.1.10",
     "events": "^1.0.1",
