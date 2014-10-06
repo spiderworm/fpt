@@ -5,10 +5,9 @@ var ServerGameItem = require('../gameItem/ServerGameItem');
 
 function InstantPlayer(connection,position) {
 
-    var playerShape = new CANNON.Box(
-        new CANNON.Vec3(1/3,.75,1/3)
-    );
-    var physics = this.physics = new CANNON.RigidBody(1000, playerShape);
+    var playerShape = new CANNON.Box(new CANNON.Vec3(.48,.96,.16));
+    var physics = new CANNON.Body({mass: 100});
+    physics.addShape(playerShape);
     physics.position.set(position[0], position[1], position[2]);
 
     ServerPlayer.apply(this,[
@@ -17,8 +16,8 @@ function InstantPlayer(connection,position) {
         null
     ]);
 
-    //var rightArm = new Arm();
-    //this.attachItem(rightArm,[0,0,0],[0,0,0]);
+    var rightArm = new Arm();
+    this.attachItem([.4,.48,0],rightArm,[-.16,.48,0]);
 
 }
 
@@ -52,9 +51,10 @@ InstantPlayer.serialize = function(instantPlayer) {
 
 function Arm() {
     var armShape = new CANNON.Box(
-        new CANNON.Vec3(.1,.5,.1)
+        new CANNON.Vec3(.16,.48,.16)
     );
-    var physics = new CANNON.RigidBody(10, armShape);
+    var physics = new CANNON.Body({mass: 1});
+    physics.addShape(armShape);
 
     ServerGameItem.apply(
         this,

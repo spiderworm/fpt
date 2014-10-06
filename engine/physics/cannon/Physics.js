@@ -68,7 +68,9 @@ Physics.prototype.createPhysicsEntities = function createPhysicsEntities(chunk) 
     })
     var position = result.position.map(function(v, i) {return v + result.dims[i] / 2})
     var boxShape = new CANNON.Box(new CANNON.Vec3(result.dims[WIDTH] / 2, result.dims[HEIGHT] / 2, result.dims[DEPTH] / 2))
-    var box = new CANNON.RigidBody(0, boxShape)
+    var box = new CANNON.Body({mass: 0, type: CANNON.Body.STATIC});
+    box.addShape(boxShape);
+
     box.position.set.apply(box.position, position)
     self.world.add(box)
 
@@ -107,13 +109,12 @@ function Physics(THREE, opts) {
 function createWorld(opts) {
   opts = opts || {}
   var world = new CANNON.World();
-  if (opts.gravity) world.gravity = opts.gravity
-    world.broadphase = new CANNON.NaiveBroadphase();
-  var solver = new CANNON.GSSolver();
-  solver.iterations = 7;
+  if (opts.gravity) world.gravity = opts.gravity;
+  /*
+  world.broadphase = new CANNON.NaiveBroadphase();
+  world.solver.iterations = 10;
   world.defaultContactMaterial.contactEquationRegularizationTime = 0.55;
-  solver.tolerance = 0.01;
-  world.solver = solver// new CANNON.SplitSolver(solver);
+  world.solver.tolerance = 0.01;
 
   world.quatNormalizeFast = true;
   world.quatNormalizeSkip = 0;
@@ -124,6 +125,7 @@ function createWorld(opts) {
   world.defaultContactMaterial.contactEquationRegularizationTime = 4;
   world.broadphase.useBoundingBoxes = true;
   world.allowSleep = false;
+  */
   return world
 }
 
@@ -131,10 +133,28 @@ Physics.prototype.add = function add(body) {
   var item = {
     mesh: null,
     body: body
-  }
-  this.items.push(item)
-  this.world.add(body)
-  return item
+  };
+  this.items.push(item);
+  this.world.add(body);
+  return item;
+}
+
+Physics.prototype.remove = function remove(body) {
+  this.world.remove(body);
+}
+
+Physics.prototype.addConstraint = function addConstraint(constraint) {
+  var item = {
+    mesh: null,
+    body: constraint
+  };
+  this.items.push(item);
+  this.world.addConstraint(constraint);
+  return item;
+}
+
+Physics.prototype.removeConstraint = function remove(constraint) {
+  this.world.removeConstraint(constraint);
 }
 
 Physics.prototype.tick = function tick(dt) {

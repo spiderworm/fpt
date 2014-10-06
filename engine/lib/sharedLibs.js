@@ -5,5 +5,5 @@ var libs = {
   THREE: THREE,
   CANNON: CANNON
 };
-
+console.info(CANNON.Box);
 module.exports = libs;

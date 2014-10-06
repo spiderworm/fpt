@@ -3,6 +3,7 @@ var EventEmitter = require('events').EventEmitter;
 var Class = require('../lib/Class');
 var GameItemTypes = require('./GameItemTypes');
 var CANNON = require('../lib/sharedLibs').CANNON;
+var THREE = require('../lib/sharedLibs').THREE;
 
 function GameItem(id,physics,view) {
   EventEmitter.apply(this);
@@ -12,18 +13,15 @@ function GameItem(id,physics,view) {
   this.__items = {};
   this.avatar = this;
 
-  this.__physicsItems = [];
-  this.physics = physics;
-  if(physics) {
-    if(physics instanceof CANNON.World) {
-      this.__setPhysicsWorld(physics);
-    } else {
-      this.__addPhysicsItem(physics);
-    }
-  }
+  this.__physicsWorld = null;
+  this.__physicsBodies = [];
+  this.__physicsConstraints = [];
+  this.__viewScene = null;
+  this.__viewItems = [];
 
+  this.physics = physics;
   this.view = view;
-  this.mesh = view;
+
   var viewPosition = view ? view.position : {};
   var viewQuaterion = view ? view.quaternion : {};
   var physicsPosition = physics ? physics.position : {};
@@ -31,9 +29,6 @@ function GameItem(id,physics,view) {
   this.position = new Position(physicsPosition,viewPosition);
   this.quaternion = new Quaternion(physicsQuaternion,viewQuaterion);
 
-  if(physics) {
-    physics.gameItem = this;
-  }
 }
 
 Class.subclass(EventEmitter,GameItem);
@@ -43,6 +38,63 @@ Object.defineProperty(GameItem.prototype,'id',{
     return this._gameItemID;
   },
   set: function() {}
+});
+
+Object.defineProperty(GameItem.prototype,'physics',{
+  get: function() {
+    return this._physics;
+  },
+  set: function(physics) {
+    if(physics) {
+      if(this._physics) {
+        this.physics = null;
+      }
+      this._physics = physics;
+      if(physics instanceof CANNON.World) {
+        this.__setPhysicsWorld(physics);
+      } else {
+        this.__addPhysicsBody(physics);
+      }
+    } else {
+      if(this._physics) {
+        this.__removePhysicsItem(this._physics);
+      }
+      this._physics = null;
+    }
+  }
+});
+
+Object.defineProperty(GameItem.prototype,'view',{
+  get: function() {
+    return this._view;
+  },
+  set: function(view) {
+    if(view) {
+      if(this._view) {
+        this.view = null;
+      }
+      this._view = view;
+      if(view instanceof THREE.Scene) {
+        this.__setViewScene(view);
+      } else {
+        this.__addViewItem(view);
+      }
+    } else {
+      if(this._view) {
+        this.__removeViewItem(this._view);
+      }
+      this._view = null;
+    }
+  }
+});
+
+Object.defineProperty(GameItem.prototype,'mesh',{
+  get: function() {
+    return this.view;
+  },
+  set: function(mesh) {
+    this.view = mesh;
+  }
 });
 
 GameItem.prototype.tick = function(ms) {
@@ -88,9 +140,13 @@ GameItem.prototype.eachItem = function(callback) {
 }
 
 GameItem.prototype.addItem = function(gameItem) {
+  if(this.__items[gameItem.id]) {
+    this.removeItem(this.__items[gameItem.id]);
+    //throw new Error('I already have item ' + gameItem.id);
+  }
   if(gameItem instanceof GameItem) {
-    if(gameItem.view && this.view) {
-      this.view.add(gameItem.view);
+    if(this.__viewScene) {
+      gameItem.__setViewScene(this.__viewScene);
     }
     if(this.__physicsWorld) {
       gameItem.__setPhysicsWorld(this.__physicsWorld);
@@ -100,20 +156,31 @@ GameItem.prototype.addItem = function(gameItem) {
   this.emit('new-item',gameItem);
 }
 
-GameItem.prototype.attachItem = function(gameItem,thisPivot,itemPivot) {
+GameItem.prototype.removeItem = function(gameItem) {
+  if(this.__items[gameItem.id] === gameItem) {
+    if(gameItem instanceof GameItem) {
+      gameItem.__unsetViewScene();
+      gameItem.__unsetPhysicsWorld();
+    }
+    this.__items[gameItem.id] = null;
+  }
+}
+
+GameItem.prototype.attachItem = function(thisPivot,gameItem,itemPivot) {
   this.addItem(gameItem);
   var bodyA = this.physics;
   var bodyB = gameItem.physics;
 
   var thisPivot = new CANNON.Vec3(thisPivot[0],thisPivot[1],thisPivot[2]);
-  var localPivotB = new CANNON.Vec3(itemPivot[0],itemPivot[1],itemPivot[2]);
+  var localPivot = new CANNON.Vec3(itemPivot[0],itemPivot[1],itemPivot[2]);
   var constraint = new CANNON.PointToPointConstraint(
     bodyA,
     thisPivot,
     bodyB,
-    localPivotB
+    localPivot,
+    100
   );
-  gameItem.__addPhysicsItem(constraint);
+  gameItem.__addPhysicsConstraint(constraint);
 }
 
 GameItem.prototype.subscribeToItems = function(Type,callback) {
@@ -202,34 +269,112 @@ GameItem.prototype.__findTypeByID = function(typeID) {
 
 function addToWorld(physicsWorld,physicsItem) {
   if(physicsWorld) {
-    if(physicsItem instanceof CANNON.Constraint) {
+    if(physicsItem instanceof CANNON.PointToPointConstraint) {
       physicsWorld.addConstraint(physicsItem);
-    } else if(
-      physicsItem instanceof CANNON.Body ||
-      physicsItem instanceof CANNON.RigidBody
-    ) {
+    } else if(physicsItem instanceof CANNON.Body) {
       physicsWorld.add(physicsItem);
+    }
+  }
+}
+
+function removeFromWorld(physicsWorld,physicsItem) {
+  if(physicsWorld) {
+    if(physicsItem instanceof CANNON.PointToPointConstraint) {
+      physicsWorld.removeConstraint(physicsItem);
+    } else if(physicsItem instanceof CANNON.Body) {
+      physicsWorld.remove(physicsItem);
     }
   }
 }
 
 GameItem.prototype.__setPhysicsWorld = function(physicsWorld) {
   this.__physicsWorld = physicsWorld;
-  for(var i=0; i<this.__physicsItems.length; i++) {
-    addToWorld(physicsWorld,this.__physicsItems[i]);
+  for(var i=0; i<this.__physicsBodies.length; i++) {
+    addToWorld(physicsWorld,this.__physicsBodies[i]);
   }
   this.eachItem(function(item) {
     if(item instanceof GameItem) {
       item.__setPhysicsWorld(physicsWorld);
     }
   });
+  for(var i=0; i<this.__physicsConstraints.length; i++) {
+    addToWorld(physicsWorld,this.__physicsConstraints[i]);
+  }
 }
 
-GameItem.prototype.__addPhysicsItem = function(physicsItem) {
-  this.__physicsItems.push(physicsItem);
-  addToWorld(this.__physicsWorld,physicsItem);
+GameItem.prototype.__unsetPhysicsWorld = function(physicsWorld) {
+  var physicsWorld = this.__physicsWorld;
+  this.__physicsWorld = null;
+  for(var i=0; i<this.__physicsConstraints.length; i++) {
+    removeFromWorld(physicsWorld,this.__physicsConstraints[i]);
+  }
+  this.eachItem(function(item) {
+    if(item instanceof GameItem) {
+      item.__unsetPhysicsWorld();
+    }
+  });
+  for(var i=0; i<this.__physicsBodies.length; i++) {
+    removeFromWorld(physicsWorld,this.__physicsBodies[i]);
+  }
 }
 
+GameItem.prototype.__addPhysicsBody = function(body) {
+  this.__physicsBodies.push(body);
+  addToWorld(this.__physicsWorld,body);
+}
+
+GameItem.prototype.__addPhysicsConstraint = function(constraint) {
+  this.__physicsConstraints.push(constraint);
+  addToWorld(constraint);
+}
+
+
+
+
+
+/* view helper methods */
+
+function addToScene(scene,viewItem) {
+  if(scene) {
+    scene.add(viewItem);
+  }
+}
+
+function removeFromScene(scene,viewItem) {
+  if(scene) {
+    scene.remove(viewItem);
+  }
+}
+
+GameItem.prototype.__setViewScene = function(scene) {
+  this.__viewScene = scene;
+  for(var i=0; i<this.__viewItems.length; i++) {
+    addToScene(scene,this.__viewItems[i]);
+  }
+  this.eachItem(function(item) {
+    if(item instanceof GameItem) {
+      item.__setViewScene(scene);
+    }
+  });
+}
+
+GameItem.prototype.__unsetViewScene = function() {
+  var scene = this.__viewScene;
+  this.__viewScene = null;
+  for(var i=0; i<this.__viewItems.length; i++) {
+    removeFromScene(scene,this.__viewItems[i]);
+  }
+  this.eachItem(function(item) {
+    if(item instanceof GameItem) {
+      item.__unsetViewScene();
+    }
+  });
+}
+
+GameItem.prototype.__addViewItem = function(viewItem) {
+  this.__viewItems.push(viewItem);
+  addToScene(this.__viewScene,viewItem);
+}
 
 
 
@@ -265,9 +410,6 @@ GameItem.subclass = function(Constructor) {
 
 
 function Position(physicsPosition,meshPosition) {
-  if(!physicsPosition) {
-    console.trace("Here I am!");
-  }
   this._physics = physicsPosition;
   this._mesh = meshPosition;
 }

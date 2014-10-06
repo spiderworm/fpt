@@ -1,8 +1,9 @@
 var Engine = require('../../serverEngine');
 
 function ServerGrenade() {
-  var shape = new Engine.CANNON.Sphere(5);
-  var physics = new Engine.CANNON.RigidBody(1,shape);
+  var shape = new Engine.CANNON.Sphere(.2);
+  var physics = new Engine.CANNON.Body({mass: .1});
+  physics.addShape(shape);
   physics.position.set(0,0,0);
 
   Engine.Server.GameItem.apply(this,[null,physics,null]);

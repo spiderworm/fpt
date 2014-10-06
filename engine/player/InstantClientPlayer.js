@@ -9,12 +9,25 @@ var lastMesh;
 
 function InstantPlayer(entityID,initialPosition,img,skinOpts) {
 
-  window.player = this;
-
+  /*
   var playerSkin = new PlayerSkin(THREE,img,skinOpts);
   var mesh = playerSkin.mesh;
   lastMesh = mesh;
   mesh.useQuaternion = true;
+  */
+
+  var geometry = new THREE.CubeGeometry(.48,.8,.16);
+  var material = new THREE.MeshBasicMaterial({color: 0xff0000, wireframe: true});
+  var mesh = new THREE.Mesh(geometry,material);
+
+  var headGeometry = new THREE.CubeGeometry(.16,.16,.16);
+  mesh.head = new THREE.Mesh(headGeometry,material);
+  mesh.head.position.set(0,.48,0);
+  mesh.add(mesh.head);
+
+  mesh.cameraOutside = new THREE.Object3D();
+  mesh.head.add(mesh.cameraOutside);
+  mesh.cameraOutside.position.set(0,0,2);
 
   ClientPlayer.apply(this,[
     entityID,
@@ -55,8 +68,23 @@ ClientGameItem.subclass(Arm);
 ClientGameItem.types.add('PlayerArm',Arm);
 
 Arm.deserialize = function(vals) {
-  var armMesh = lastMesh.children[0].children[1];
-  return new Arm(armMesh);
+
+  /*
+  var armMesh = lastMesh.children[0].children[0].children[2].children[2];
+  if(armMesh) {
+    var armgeo = armMesh.geometry;
+    for(var i=0; i < 8; i++) {
+      armgeo.vertices[i].y += 4;
+    }
+    armMesh.scale.set(0.04, 0.04, 0.04);
+  }
+  */
+
+  var geometry = new THREE.CubeGeometry(.16,.48,.16);
+  var material = new THREE.MeshBasicMaterial({color: 0xff0000, wireframe: true});
+  var mesh = new THREE.Mesh(geometry,material);
+
+  return new Arm(mesh);
 }
 
 

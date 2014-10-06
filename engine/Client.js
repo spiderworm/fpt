@@ -140,6 +140,7 @@ Client.prototype.exportMap = function() {
 Client.prototype._control = function(gameItem) {
   this._controls.setTarget(gameItem);
   this._camera.possess(gameItem);
+  this._camera.pov(3);
 }
 
 
