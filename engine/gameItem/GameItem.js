@@ -336,6 +336,7 @@ GameItem.prototype.__addPhysicsConstraint = function(constraint) {
 
 function addToScene(scene,viewItem) {
   if(scene) {
+    viewItem.useQuaternion = true;
     scene.add(viewItem);
   }
 }

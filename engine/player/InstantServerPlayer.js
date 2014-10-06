@@ -2,10 +2,17 @@ var ServerPlayer = require('./ServerPlayer');
 var libs = require('../lib/sharedLibs');
 var CANNON = libs.CANNON;
 var ServerGameItem = require('../gameItem/ServerGameItem');
+var InstantPlayerMixin = require('./InstantPlayerMixin');
 
 function InstantPlayer(connection,position) {
 
-    var playerShape = new CANNON.Box(new CANNON.Vec3(.48,.96,.16));
+    InstantPlayerMixin.apply(this);
+
+    var playerShape = new CANNON.Box(new CANNON.Vec3(
+        this._size[0]/2,
+        this._size[1]/2,
+        this._size[2]/2
+    ));
     var physics = new CANNON.Body({mass: 100});
     physics.addShape(playerShape);
     physics.position.set(position[0], position[1], position[2]);
@@ -16,12 +23,13 @@ function InstantPlayer(connection,position) {
         null
     ]);
 
-    var rightArm = new Arm();
-    this.attachItem([.4,.48,0],rightArm,[-.16,.48,0]);
+    //var rightArm = new Arm();
+    //this.attachItem([.4,.48,0],rightArm,[-.16,.48,0]);
 
 }
 
 ServerPlayer.subclass(InstantPlayer);
+InstantPlayerMixin.mixin(InstantPlayer);
 
 InstantPlayer.prototype.tick = function(dt) {
     ServerPlayer.prototype.tick.apply(this,[dt]);

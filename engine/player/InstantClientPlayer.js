@@ -3,12 +3,14 @@ var ClientPlayer = require('./ClientPlayer');
 var libs = require('../lib/sharedLibs');
 var THREE = libs.THREE;
 var ClientGameItem = require('../gameItem/ClientGameItem');
+var InstantPlayerMixin = require('./InstantPlayerMixin');
 
 
 var lastMesh;
 
 function InstantPlayer(entityID,initialPosition,img,skinOpts) {
 
+  InstantPlayerMixin.apply(this);
   /*
   var playerSkin = new PlayerSkin(THREE,img,skinOpts);
   var mesh = playerSkin.mesh;
@@ -16,13 +18,25 @@ function InstantPlayer(entityID,initialPosition,img,skinOpts) {
   mesh.useQuaternion = true;
   */
 
-  var geometry = new THREE.CubeGeometry(.48,.8,.16);
+  var geometry = new THREE.CubeGeometry(
+    this._size[0],
+    this._size[1],
+    this._size[2]
+  );
   var material = new THREE.MeshBasicMaterial({color: 0xff0000, wireframe: true});
   var mesh = new THREE.Mesh(geometry,material);
 
-  var headGeometry = new THREE.CubeGeometry(.16,.16,.16);
+  var headGeometry = new THREE.CubeGeometry(
+    this._headSize[0],
+    this._headSize[1],
+    this._headSize[2]
+  );
   mesh.head = new THREE.Mesh(headGeometry,material);
-  mesh.head.position.set(0,.48,0);
+  mesh.head.position.set(
+    0,
+    (this._size[1] * .5) + (this._headSize[1] * .5),
+    0
+  );
   mesh.add(mesh.head);
 
   mesh.cameraOutside = new THREE.Object3D();
@@ -42,6 +56,9 @@ function InstantPlayer(entityID,initialPosition,img,skinOpts) {
 }
 
 ClientPlayer.subclass(InstantPlayer);
+InstantPlayerMixin.mixin(InstantPlayer);
+
+
 
 InstantPlayer.deserialize = function(vals) {
   return new InstantPlayer(null,[0,0,0],"",{});
