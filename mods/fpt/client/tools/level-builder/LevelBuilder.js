@@ -21,17 +21,18 @@ export default class LevelBuilder {
 		character.get('pieces').get('head').get('physics').position = {x: 0, y: 10, z: 0};
 		this.game.entities.add(character);
 
+/*
 		setInterval(function() {
 			character.get('physics').cannon.angularVelocity.set(0, .5, 0);
 		},100);
-		/*
+*/
+
 		controls.setTarget(
 			character,
 			character,
 			character.get('pieces').get('head'),
 			character.get('pieces').get('head')
 		);
-		*/
 
 		let physicsDebugView = PhysicsDebugView.create(this.view);
 		this.view.systems.add(physicsDebugView);
