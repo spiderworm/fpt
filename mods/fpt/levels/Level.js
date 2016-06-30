@@ -10,41 +10,35 @@ let Level = System.createClass({
 		let entity = this.entity = Entity.create();
 		let pieces = PiecesComponent.create();
 		entity.set('pieces', pieces);
-		this.terrain = Terrain.create({
-			solver: this.generateSolver
-		});
-		if (this.exported) {
+		this.terrain = Terrain.create({solver: this.terrainGeneration.solver});
+		if (this.importPath) {
 			let x = new XMLHttpRequest();
-			x.open('GET', this.exported, false);
+			x.open('GET', this.importPath, false);
 			x.send();
 			this.import(JSON.parse(x.responseText));
 		}
-		if (this.generate) {
-			this.terrain.generateRange(this.generateRange.low, this.generateRange.high);
+		if (this.terrainGeneration.enabled) {
+			this.terrain.generateRange(this.terrainGeneration.range.low, this.terrainGeneration.range.high);
 		}
 		pieces.add(this.terrain);
 	},
 
-	generate: true,
-
-	generateSolver: function(x, y, z) {
-		return 0;
-	},
-
-	generateRange: {
-		low: {
-			x: -1,
-			y: -1,
-			z: -1
-		},
-		high: {
-			x: 1,
-			y: 1,
-			z: 1
+	terrainGeneration: {
+		enabled: false,
+		solver: function() { return 0; },
+		range: {
+			low: {
+				x: 0,
+				y: 0,
+				z: 0
+			},
+			high: {
+				x: 0,
+				y: 0,
+				z: 0
+			}
 		}
 	},
-
-	exported: null,
 
 	export: function() {
 		return {

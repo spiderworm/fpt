@@ -1,7 +1,7 @@
 
 import FPTGame from '../game/FPTGame';
 import FPTGameView from './view/FPTGameView';
-import TestLevel1 from '../levels/TestLevel1';
+import EmptyLevel from '../levels/EmptyLevel';
 import ClientConnection from './ClientConnection';
 import ClientSession from './ClientSession';
 
@@ -9,7 +9,7 @@ export default class FPTClient {
 
 	constructor() {
 		this.game = FPTGame.create();
-		this.game.setLevel(TestLevel1.create());
+		this.game.setLevel(new EmptyLevel());
 		this.view = FPTGameView.create(this.game);
 
 		this.connection = ClientConnection.create();

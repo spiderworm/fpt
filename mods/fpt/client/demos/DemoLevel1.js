@@ -3,45 +3,42 @@ import Level from '../../levels/Level';
 
 let DemoLevel1 = Level.createClass({
 
-	generate: true,
-
-	generateSolver: function(x, y, z) {
-		var funcs = [ground, wall];
-		var result = 0;
-
-		funcs.forEach(function(func) {
-			var newResult = func(x, y, z);
-			if (newResult) {
-				result = newResult;
+	terrainGeneration: {
+		enabled: true,
+		solver: generate,
+		range: {
+			low: {
+				x: -20,
+				y: -1,
+				z: -20
+			},
+			high: {
+				x: 20,
+				y: 10,
+				z: 20
 			}
-		});
-
-		return result;
-	},
-
-	generateRange: {
-		low: {
-			x: -20,
-			y: -1,
-			z: -20
 		},
-		high: {
-			x: 20,
-			y: 10,
-			z: 20
-		}
 	},
 
-	//exported: '/client/demos/demoLevel1.exported.json'
+	importPath: false, //'/client/demos/demoLevel1.exported.json',
 
 });
 
-DemoLevel1.create = function() {
-	return new DemoLevel1();
-};
-
-
 const GROUND_LEVEL = 0;
+
+function generate(x, y, z) {
+	var funcs = [ground, wall];
+	var result = 0;
+
+	funcs.forEach(function(func) {
+		var newResult = func(x, y, z);
+		if (newResult) {
+			result = newResult;
+		}
+	});
+
+	return result;
+}
 
 function ground(x, y, z) {
 	if (y === GROUND_LEVEL) {

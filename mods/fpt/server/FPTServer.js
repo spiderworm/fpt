@@ -1,7 +1,7 @@
 
 import Webserver from './Webserver';
 import FPTGame from '../game/FPTGame';
-import TestLevel1 from '../levels/TestLevel1';
+import EmptyLevel from '../levels/EmptyLevel';
 import ws from 'ws';
 import ServerSessionManager from './ServerSessionManager';
 
@@ -21,7 +21,7 @@ class FPTServer {
 
 		let webserver = Webserver.create();
 		let game = FPTGame.create();
-		game.setLevel(TestLevel1.create());
+		game.setLevel(new EmptyLevel());
 	}
 
 }
