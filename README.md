@@ -1,5 +1,6 @@
 
 npm install
+(ignore warnings about peer dependencies)
 
 in one shell, run:
 webpack

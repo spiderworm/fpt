@@ -3,7 +3,7 @@ import Level from '../../levels/Level';
 
 let DemoLevel1 = Level.createClass({
 
-	generate: false,
+	generate: true,
 
 	generateSolver: function(x, y, z) {
 		var funcs = [ground, wall];
@@ -21,18 +21,18 @@ let DemoLevel1 = Level.createClass({
 
 	generateRange: {
 		low: {
-			x: -200,
+			x: -20,
 			y: -1,
-			z: -200
+			z: -20
 		},
 		high: {
-			x: 200,
+			x: 20,
 			y: 10,
-			z: 200
+			z: 20
 		}
 	},
 
-	exported: '/client/demos/demoLevel1.exported.json'
+	//exported: '/client/demos/demoLevel1.exported.json'
 
 });
 
